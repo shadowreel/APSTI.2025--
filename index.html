@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Salón Futurista - APSTI</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Rajdhani', sans-serif;
+  overflow-x: hidden;
+
+  /* Fondo fijo con imagen y tono azulado */
+  background: url('IMAGENES/488039488_1038456791676296_1737774077323251227_n.jpg') no-repeat center center fixed;
+  background-size: cover;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0, 100, 200, 0.4); /* Tono azulado semitransparente */
+  z-index: 1;
+}
+
+/* Título central imponente */
+.titulo {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(3rem, 9vw, 8rem);
+  font-weight: 900;
+  color: #0077ff;
+  z-index: 20;
+  text-shadow: 0 0 10px #fff, 0 0 20px rgba(255,255,255,0.5), 0 0 30px rgba(0,170,255,0.6), 0 0 40px rgba(0,170,255,0.4);
+  letter-spacing: 5px;
+  pointer-events: none;
+  text-align: center;
+}
+
+/* Frase fija debajo de la imagen */
+.frase {
+  position: absolute;
+  bottom: 10%; /* Justo debajo de la imagen */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  font-size: clamp(1.5rem, 3.5vw, 3rem);
+  background: rgba(0,0,0,0.6); /* Fondo para legibilidad */
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-align: center;
+  text-shadow: 0 0 6px rgba(0,0,0,0.8);
+  color: #ffffff;
+}
+
+/* Ajuste en móviles */
+@media (max-width: 768px) {
+  .frase {
+    bottom: 8%;
+    font-size: clamp(1.2rem, 4vw, 2rem);
+  }
+}
+
+/* Slider */
+.slider { position: relative; width: 100%; height: 100vh; overflow: hidden; z-index: 10; }
+.slides { display: flex; height: 100%; transition: transform 1s ease-in-out; }
+
+/* Slides con zoom en fondo */
+.slide {
+  min-width: 100%;
+  height: 100%;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-color: transparent;
+  transition: transform 6s ease;
+  position: relative;
+}
+.slide.active { transform: scale(1.1); }
+
+/* Controles */
+.controls { position: absolute; top: 50%; left: 0; right: 0; display: flex; justify-content: space-between; transform: translateY(-50%); pointer-events: none; padding: 0 15px; }
+.controls button { pointer-events: auto; background: rgba(255, 255, 255, 0.33); border: none; color: rgb(0, 0, 0); padding: 12px 16px; border-radius: 50%; cursor: pointer; font-size: 1.6rem; transition: background 0.3s; }
+.controls button:hover { background: rgba(0,170,255,0.4); }
+
+/* Dots */
+.dots { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); display: flex; gap: 10px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.2); cursor: pointer; transition: background 0.3s, transform 0.3s; }
+.dot.active { background: #00aaff; transform: scale(1.2); }
+
+</style>
+</head>
+<body>
+
+<div class="titulo">APSTI</div>
+<div class="frase" id="frase">Innovación y Tecnología</div>
+
+<div class="slider" id="slider">
+  <div class="slides" id="slides">
+    <div class="slide" style="background-image: url('IMAGENES/Imagen de WhatsApp 2025-09-13 a las 18.47.07_9ff9e026.jpg')"></div>
+    <div class="slide" style="background-image: url('IMAGENES/IMG_20250717_114214.jpg')"></div>
+    <div class="slide" style="background-image: url('IMAGENES/IMG_20250711_210131.jpg')"></div>
+    <div class="slide" style="background-image: url('IMAGENES/Imagen de WhatsApp 2025-09-13 a las 18.47.08_959178cd.jpg')"></div>
+    <div class="slide" style="background-image: url('IMAGENES/Imagen de WhatsApp 2025-09-13 a las 18.48.17_7e13e3c1.jpg')"></div>
+  </div>
+
+  <div class="controls">
+    <button id="prev">&#10094;</button>
+    <button id="next">&#10095;</button>
+  </div>
+
+  <div class="dots" id="dots"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const slider = document.getElementById('slider');
+  const slidesEl = document.getElementById('slides');
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const prev = document.getElementById('prev');
+  const next = document.getElementById('next');
+  const dotsContainer = document.getElementById('dots');
+  const frase = document.getElementById('frase');
+
+  const frases = [
+    { texto: "Pasión y trabajo en equipo", color: "#ffffff" },
+    { texto: "con energía y espíritu competitivo", color: "#ffffff" },
+    { texto: "Transformamos juntos cada momento en recuerdos", color: "#ffffff" },
+    { texto: "Conectando conocimientos y creando soluciones", color: "#ffffff" },
+    { texto: "Juntos no tenemos límites", color: "#ffffff" }
+  ];
+
+  let index = 0;
+  const AUTO_DELAY = 5000;
+  let autoTimer = null;
+
+  slides.forEach((slide, i) => {
+    const d = document.createElement('button');
+    d.className = 'dot';
+    d.addEventListener('click', () => { goTo(i); resetAuto(); });
+    dotsContainer.appendChild(d);
+  });
+  const dots = Array.from(document.querySelectorAll('.dot'));
+
+  function update() {
+    const slideWidth = slider.clientWidth;
+    slidesEl.style.transform = `translateX(${-index * slideWidth}px)`;
+    slides.forEach((slide,i)=>slide.classList.toggle('active', i===index));
+    dots.forEach((dot,i)=>dot.classList.toggle('active', i===index));
+
+    frase.textContent = frases[index].texto;
+    frase.style.color = frases[index].color;
+  }
+
+  function goTo(i){ index = (i+slides.length)%slides.length; update(); }
+  function startAuto(){ if(!autoTimer) autoTimer=setInterval(()=>goTo(index+1),AUTO_DELAY); }
+  function stopAuto(){ clearInterval(autoTimer); autoTimer=null; }
+  function resetAuto(){ stopAuto(); startAuto(); }
+
+  prev.addEventListener('click', ()=>{ goTo(index-1); resetAuto(); });
+  next.addEventListener('click', ()=>{ goTo(index+1); resetAuto(); });
+  window.addEventListener('resize', update);
+  update(); startAuto();
+});
+</script>
+
+</body>
+</html>
+
